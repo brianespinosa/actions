@@ -20,7 +20,7 @@ This requires:
 #### Usage
 
 ```yml
-name: Review and auto-merge Dependabot PRs
+name: Dependabot PRs
 
 on: pull_request_target
 
@@ -29,6 +29,6 @@ jobs:
     permissions:
       pull-requests: write
       contents: write
-    uses: brianespinosa/actions/.github/workflows/dependabot-pr-review.yml
+    uses: brianespinosa/actions/.github/workflows/dependabot-pr-review.yml@main
     secrets: inherit
 ```

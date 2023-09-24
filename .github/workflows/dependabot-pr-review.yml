@@ -2,20 +2,6 @@ name: Dependabot PR Review
 
 on:
   workflow_call:
-    # inputs:
-    #   slack-channel:
-    #     type: string
-    #     default: 'anlz-all'
-    #     description: 'Slack channel to notify. Only supported if your token has permissions for more than one channel. By default the message will post to the channel that was configured with your Slack token.'
-    # secrets:
-    #   slack-token:
-    #     required: true
-    #     description: 'This token is needed so the action knows what Slack user to post as, and what default channel it should post into.'
-
-# NOTE: These permissions must be set in the calling workflow.
-# permissions:
-#   pull-requests: write
-#   contents: write
 
 jobs:
   dependabot-pr-review:
