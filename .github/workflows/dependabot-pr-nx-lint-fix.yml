@@ -10,19 +10,53 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.head_ref }}
+          # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
+          ref: ${{ github.event.pull_request.head.sha }}
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+      - name: Derive appropriate SHAs for base and head for `nx affected` commands
+        uses: nrwl/nx-set-shas@v3
+        with:
+          main-branch-name: "main"
+
       - uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
           cache: "yarn"
-      - run: yarn install --frozen-lockfile
+
+      - name: Print node/npm/yarn versions
+        id: versions
+        run: |
+          node_ver=$( node --version )
+          yarn_ver=$( yarn --version || true )
+
+          echo "Node: ${node_ver:1}"
+          echo "NPM: $( npm --version )"
+          if [[ $yarn_ver != '' ]]; then echo "Yarn: $yarn_ver"; fi
+
+          echo "node_version=${node_ver:1}" >> $GITHUB_OUTPUT
+          echo "yarn_version=${yarn_ver}" >> $GITHUB_OUTPUT
+
+      - name: Get yarn cache directory path [yarn berry]
+        id: yarn-berry-cache-dir-path
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+
+      - name: Use the node_modules cache if available [yarn berry]
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarn-berry-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ steps.versions.outputs.node_version }}-yarn-berry-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ steps.versions.outputs.node_version }}-yarn-berry-
+
+      - run: yarn install --immutable
       - run: yarn nx affected --target=lint --fix
       - name: Commit files
         run: |
           git config --local user.email "dependabot[bot]@users.noreply.github.com"
           git config --local user.name "dependabot[bot]"
-          git commit --amend
+          git add .
+          git commit --amend --no-edit --no-verify
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
