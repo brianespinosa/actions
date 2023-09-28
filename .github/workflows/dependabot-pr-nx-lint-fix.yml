@@ -1,0 +1,31 @@
+name: Dependabot PR NX Lint Fix
+
+on:
+  workflow_call:
+
+jobs:
+  dependabot-pr-nx-lint-fix:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+      - run: yarn install --frozen-lockfile
+      - run: yarn nx affected --target=lint --fix
+      - name: Commit files
+        run: |
+          git config --local user.email "dependabot[bot]@users.noreply.github.com"
+          git config --local user.name "dependabot[bot]"
+          git commit --amend
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: ${{ github.head_ref }}
+          force: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
